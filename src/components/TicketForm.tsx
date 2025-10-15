@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Send, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase'; // ✅ import the Supabase client
 
 interface TicketFormProps {
   onSuccess?: () => void;
@@ -23,21 +24,32 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
     setSuccess(false);
 
     try {
-      const res = await fetch('/api/tickets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      // 🟢 Insert a new ticket into Supabase
+      const { error: insertError } = await supabase.from('tickets').insert([
+        {
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          description: formData.description,
+          attachment_url: null,
+          category: null,
+          urgency: null,
+          department: null,
+          ai_suggested_reply: null,
+          assigned_agent: null,
+          status: 'CLASSIFYING', // ⚠️ n8n will update this later
+          sla_deadline: new Date().toISOString(), // temporary placeholder
+        },
+      ]);
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || 'Failed to submit ticket');
-      }
+      if (insertError) throw insertError;
 
       setSuccess(true);
       setFormData({ name: '', email: '', subject: '', description: '' });
 
-      onSuccess && setTimeout(onSuccess, 1500);
+      if (onSuccess) {
+        setTimeout(onSuccess, 1500);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit ticket');
     } finally {
@@ -63,7 +75,9 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Your Name
+          </label>
           <input
             type="text"
             required
@@ -75,7 +89,9 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Email Address
+          </label>
           <input
             type="email"
             required
@@ -87,7 +103,9 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Subject
+          </label>
           <input
             type="text"
             required
@@ -99,7 +117,9 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Description
+          </label>
           <textarea
             required
             value={formData.description}
