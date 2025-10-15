@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Send, Loader2 } from 'lucide-react';
-import { supabase } from '../lib/supabase'; // ✅ import the Supabase client
+import { supabase } from '../lib/supabase';
 
 interface TicketFormProps {
   onSuccess?: () => void;
@@ -17,6 +17,22 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  // optional: small helper so the UI doesn’t block on the webhook call
+  const notifyN8n = async (payload: unknown) => {
+    const url = import.meta.env.VITE_N8N_WEBHOOK_URL as string | undefined;
+    if (!url) return; // silently skip if not configured
+    try {
+      // Don’t block UX on this; it just kicks off the classification
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      // ignore webhook errors in the UI; your n8n logs will show failures
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -24,32 +40,42 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
     setSuccess(false);
 
     try {
-      // 🟢 Insert a new ticket into Supabase
-      const { error: insertError } = await supabase.from('tickets').insert([
-        {
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          description: formData.description,
-          attachment_url: null,
-          category: null,
-          urgency: null,
-          department: null,
-          ai_suggested_reply: null,
-          assigned_agent: null,
-          status: 'CLASSIFYING', // ⚠️ n8n will update this later
-          sla_deadline: new Date().toISOString(), // temporary placeholder
-        },
-      ]);
+      // 1) Insert a new ticket (return the new row so we have its id)
+      const { data: inserted, error: insertError } = await supabase
+        .from('tickets')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            subject: formData.subject,
+            description: formData.description,
+            // let DB defaults handle category/urgency/department if you set defaults,
+            // otherwise keep placeholders. n8n will overwrite these.
+            status: 'CLASSIFYING',
+            // schema requires NOT NULL sla_deadline; use placeholder now,
+            // n8n will compute real SLA after classification
+            sla_deadline: new Date().toISOString(),
+          },
+        ])
+        .select('id, name, email, subject, description')
+        .single();
 
       if (insertError) throw insertError;
+      if (!inserted) throw new Error('Insert returned no data');
 
+      // 2) Kick n8n to classify THIS ticket now
+      await notifyN8n({
+        id: inserted.id,
+        name: inserted.name,
+        email: inserted.email,
+        subject: inserted.subject,
+        description: inserted.description,
+      });
+
+      // 3) Reset UI
       setSuccess(true);
       setFormData({ name: '', email: '', subject: '', description: '' });
-
-      if (onSuccess) {
-        setTimeout(onSuccess, 1500);
-      }
+      onSuccess && setTimeout(onSuccess, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit ticket');
     } finally {
@@ -75,9 +101,7 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Your Name
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
           <input
             type="text"
             required
@@ -89,9 +113,7 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Email Address
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
           <input
             type="email"
             required
@@ -103,9 +125,7 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Subject
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
           <input
             type="text"
             required
@@ -117,9 +137,7 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
           <textarea
             required
             value={formData.description}
