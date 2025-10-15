@@ -19,7 +19,7 @@ function App() {
                 <Headphones className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Helpdesk Triage Assistant</h1>
+                <h1 className="text-xl font-bold text-gray-900">Helpdesk Assistant</h1>
                 <p className="text-xs text-gray-500">AI-Powered Support Automation</p>
               </div>
             </div>
