@@ -14,6 +14,23 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
   const [updating, setUpdating] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const attachmentUrls = (() => {
+    const raw = ticket.attachment_url;
+    if (!raw) return [] as string[];
+    if (Array.isArray(raw)) return raw;
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((value): value is string => typeof value === 'string');
+      }
+    } catch (error) {
+      console.warn('Failed to parse attachment_url, falling back to raw string', error);
+    }
+
+    return [raw];
+  })();
+
   const handleUpdate = async () => {
     setUpdating(true);
     try {
@@ -135,6 +152,34 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
               <p className="text-blue-900 font-semibold">{ticket.department}</p>
             </div>
           </div>
+
+          {attachmentUrls.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Attachments</h3>
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                {attachmentUrls.map((url, index) => {
+                  const cleanUrl = typeof url === 'string' ? url : String(url);
+                  const fileName = cleanUrl
+                    .split('?')[0]
+                    .split('/')
+                    .filter(Boolean)
+                    .pop() || `Attachment ${index + 1}`;
+
+                  return (
+                    <a
+                      key={`${cleanUrl}-${index}`}
+                      href={cleanUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 break-all"
+                    >
+                      {fileName}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
