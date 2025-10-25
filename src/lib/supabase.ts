@@ -12,7 +12,7 @@ export interface Ticket {
   email: string;
   subject: string;
   description: string;
-  attachment_url?: string;
+  attachment_url?: string | string[];
   category: string;
   urgency: string;
   department: string;
