@@ -16,6 +16,11 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [attachment, setAttachment] = useState<File | null>(null);
+
+  const [attachmentInputKey, setAttachmentInputKey] = useState(() =>
+    Math.random().toString(36)
+  );
 
   // optional: small helper so the UI doesn’t block on the webhook call
   const notifyN8n = async (payload: unknown) => {
@@ -40,6 +45,32 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
     setSuccess(false);
 
     try {
+      let attachmentUrl: string | undefined;
+
+      if (attachment) {
+        const bucket =
+          (import.meta.env.VITE_SUPABASE_ATTACHMENTS_BUCKET as string | undefined) ??
+          'ticket-attachments';
+        const fileExt = attachment.name.split('.').pop()?.toLowerCase() ?? 'bin';
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from(bucket)
+          .upload(filePath, attachment, {
+            contentType: attachment.type,
+            upsert: false,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from(bucket).getPublicUrl(filePath);
+
+        attachmentUrl = publicUrl;
+      }
+
       // 1) Insert a new ticket (return the new row so we have its id)
       const { data: inserted, error: insertError } = await supabase
         .from('tickets')
@@ -49,6 +80,7 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
             email: formData.email,
             subject: formData.subject,
             description: formData.description,
+            attachment_url: attachmentUrl,
             // let DB defaults handle category/urgency/department if you set defaults,
             // otherwise keep placeholders. n8n will overwrite these.
             status: 'CLASSIFYING',
@@ -57,7 +89,7 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
             sla_deadline: new Date().toISOString(),
           },
         ])
-        .select('id, name, email, subject, description')
+        .select('id, name, email, subject, description, attachment_url')
         .single();
 
       if (insertError) throw insertError;
@@ -70,11 +102,14 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
         email: inserted.email,
         subject: inserted.subject,
         description: inserted.description,
+        attachment_url: attachmentUrl ?? inserted.attachment_url,
       });
 
       // 3) Reset UI
       setSuccess(true);
       setFormData({ name: '', email: '', subject: '', description: '' });
+      setAttachment(null);
+      setAttachmentInputKey(Math.random().toString(36));
       onSuccess && setTimeout(onSuccess, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit ticket');
@@ -145,6 +180,38 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
             rows={5}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             placeholder="Please provide detailed information about your issue..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Attachment (PDF, JPG, PNG)</label>
+          <input
+            key={attachmentInputKey}
+            type="file"
+            accept="application/pdf,image/jpeg,image/png"
+            onChange={(event) => {
+              const file = event.target.files?.[0] ?? null;
+              if (!file) {
+                setAttachment(null);
+                return;
+              }
+
+              const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+              const unsupportedMessage =
+                'Unsupported file type. Please upload a PDF, JPG, or PNG file.';
+              if (!allowedTypes.includes(file.type)) {
+                setError(unsupportedMessage);
+                setAttachment(null);
+                setAttachmentInputKey(Math.random().toString(36));
+                return;
+              }
+
+              if (error === unsupportedMessage) {
+                setError('');
+              }
+              setAttachment(file);
+            }}
+            className="w-full cursor-pointer text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
         </div>
 
