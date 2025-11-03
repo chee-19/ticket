@@ -2,7 +2,9 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
-  department text check (department in ('Billing','Engineering','Product','Trust & Safety')),
+  department text check (
+    department in ('Finance','Dev','Product','Security','Support','All Departments')
+  ),
   created_at timestamptz default now()
 );
 

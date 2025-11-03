@@ -19,7 +19,7 @@ values
   (
     '11111111-1111-1111-1111-111111111111',
     '00000000-0000-0000-0000-000000000000',
-    'engineering.agent@example.com',
+    'dev.agent@example.com',
     crypt('Password123!', gen_salt('bf')),
     now(),
     now(),
@@ -35,7 +35,7 @@ values
   (
     '22222222-2222-2222-2222-222222222222',
     '00000000-0000-0000-0000-000000000000',
-    'billing.agent@example.com',
+    'finance.agent@example.com',
     crypt('Password123!', gen_salt('bf')),
     now(),
     now(),
@@ -61,8 +61,8 @@ on conflict (id) do update set
 -- Seed matching profiles
 insert into public.profiles (id, full_name, department)
 values
-  ('11111111-1111-1111-1111-111111111111', 'Erin Engineer', 'Engineering'),
-  ('22222222-2222-2222-2222-222222222222', 'Blake Billing', 'Billing')
+  ('11111111-1111-1111-1111-111111111111', 'Devon Dev', 'Dev'),
+  ('22222222-2222-2222-2222-222222222222', 'Farah Finance', 'Finance')
 on conflict (id) do update set
   full_name = excluded.full_name,
   department = excluded.department;
@@ -87,9 +87,9 @@ values
     'finance@acmecorp.example',
     'Invoice shows incorrect total',
     'Our latest invoice total does not match the agreed upon contract price. Please review and correct.',
-    'Billing',
+    'Finance',
     'High',
-    'Billing',
+    'Finance',
     'Open',
     now() + interval '24 hours',
     now() - interval '2 hours',
@@ -102,7 +102,7 @@ values
     'After deploying the latest release our CI pipeline fails with a null pointer exception in the payment module.',
     'Bug',
     'High',
-    'Engineering',
+    'Dev',
     'In Progress',
     now() + interval '12 hours',
     now() - interval '4 hours',
@@ -113,9 +113,9 @@ values
     'support@contoso.example',
     'Request for usage analytics export',
     'We need a full export of the last quarter usage analytics for compliance review.',
-    'Feature Request',
+    'General Inquiry',
     'Medium',
-    'Engineering',
+    'Support',
     'Open',
     now() + interval '48 hours',
     now() - interval '1 day',

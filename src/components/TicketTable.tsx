@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase, Ticket } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { shouldFilterByDepartment } from '../constants/departments';
 
 interface TicketTableProps {
   tickets?: Ticket[];
@@ -29,11 +30,16 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
     const fetchTickets = async () => {
       setInternalLoading(true);
       setError(null);
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('tickets')
         .select('*')
-        .eq('department', profile.department)
         .order('created_at', { ascending: false });
+
+      if (shouldFilterByDepartment(profile.department)) {
+        query = query.eq('department', profile.department);
+      }
+
+      const { data, error: fetchError } = await query;
 
       if (!isMounted) return;
 

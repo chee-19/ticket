@@ -13,6 +13,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { shouldFilterByDepartment } from '../constants/departments';
 
 interface TicketDetailProps {
   ticket?: Ticket;
@@ -52,12 +53,16 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     const fetchTicket = async () => {
       setLoading(true);
       setError(null);
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('tickets')
         .select('*')
-        .eq('id', params.id)
-        .eq('department', profile.department)
-        .maybeSingle();
+        .eq('id', params.id);
+
+      if (shouldFilterByDepartment(profile.department)) {
+        query = query.eq('department', profile.department);
+      }
+
+      const { data, error: fetchError } = await query.maybeSingle();
 
       if (!isMounted) return;
 

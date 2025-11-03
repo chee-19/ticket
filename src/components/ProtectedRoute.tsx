@@ -58,6 +58,12 @@ function StaffLayout({ children }: { children: ReactNode }) {
     navigate('/login', { replace: true });
   };
 
+  const departmentLabel = profile?.department
+    ? profile.department === 'All Departments'
+      ? 'All Departments Workspace'
+      : `${profile.department} Department Workspace`
+    : 'Department Workspace';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <nav className="bg-white shadow-md border-b border-gray-200">
@@ -69,7 +75,7 @@ function StaffLayout({ children }: { children: ReactNode }) {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Helpdesk Assistant</h1>
-                <p className="text-xs text-gray-500">{profile?.department} Department Workspace</p>
+                <p className="text-xs text-gray-500">{departmentLabel}</p>
               </div>
             </div>
 

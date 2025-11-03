@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase, Ticket } from '../lib/supabase';
 import { TrendingUp, AlertTriangle, Clock, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { shouldFilterByDepartment } from '../constants/departments';
 
 export function Analytics() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -15,11 +16,16 @@ export function Analytics() {
 
     const fetchTickets = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('tickets')
         .select('*')
-        .eq('department', profile.department)
         .order('created_at', { ascending: false });
+
+      if (shouldFilterByDepartment(profile.department)) {
+        query = query.eq('department', profile.department);
+      }
+
+      const { data, error } = await query;
 
       if (!isMounted) return;
 

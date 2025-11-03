@@ -9,11 +9,12 @@ import {
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import type { Department } from '../constants/departments';
 
 export type Profile = {
   id: string;
   full_name: string | null;
-  department: 'Billing' | 'Engineering' | 'Product' | 'Trust & Safety' | null;
+  department: Department | null;
   created_at: string;
 };
 

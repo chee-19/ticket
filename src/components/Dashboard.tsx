@@ -4,6 +4,11 @@ import { TicketTable } from './TicketTable';
 import { TicketDetail } from './TicketDetail';
 import { Filter } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  DEPARTMENTS,
+  shouldFilterByDepartment,
+  type Department,
+} from '../constants/departments';
 
 export function Dashboard() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -27,7 +32,12 @@ export function Dashboard() {
 
   useEffect(() => {
     if (profile?.department) {
-      setFilters((prev) => ({ ...prev, department: profile.department }));
+      setFilters((prev) => ({
+        ...prev,
+        department: shouldFilterByDepartment(profile.department)
+          ? profile.department
+          : 'all',
+      }));
     }
   }, [profile?.department]);
 
@@ -35,14 +45,19 @@ export function Dashboard() {
     applyFilters();
   }, [tickets, filters]);
 
-  const fetchTickets = async (department: string) => {
+  const fetchTickets = async (department: Department | null) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('tickets')
         .select('*')
-        .eq('department', department)
         .order('created_at', { ascending: false });
+
+      if (shouldFilterByDepartment(department)) {
+        query = query.eq('department', department);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setTickets(data || []);
@@ -139,9 +154,11 @@ export function Dashboard() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">All Departments</option>
-              {profile?.department && (
-                <option value={profile.department}>{profile.department}</option>
-              )}
+              {DEPARTMENTS.filter((dept) => dept !== 'All Departments').map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
             </select>
           </div>
 
