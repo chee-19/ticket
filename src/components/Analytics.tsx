@@ -1,30 +1,44 @@
 import { useState, useEffect } from 'react';
 import { supabase, Ticket } from '../lib/supabase';
 import { TrendingUp, AlertTriangle, Clock, Users } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Analytics() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const { profile } = useAuth();
 
   useEffect(() => {
-    fetchTickets();
-  }, []);
+    if (!profile?.department) return;
 
-  const fetchTickets = async () => {
-    try {
+    let isMounted = true;
+
+    const fetchTickets = async () => {
+      setLoading(true);
       const { data, error } = await supabase
         .from('tickets')
         .select('*')
+        .eq('department', profile.department)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setTickets(data || []);
-    } catch (error) {
-      console.error('Error fetching tickets:', error);
-    } finally {
+      if (!isMounted) return;
+
+      if (error) {
+        console.error('Error fetching tickets:', error);
+        setTickets([]);
+      } else {
+        setTickets(data || []);
+      }
+
       setLoading(false);
-    }
-  };
+    };
+
+    fetchTickets();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [profile?.department]);
 
   const calculateMetrics = () => {
     const resolvedTickets = tickets.filter(

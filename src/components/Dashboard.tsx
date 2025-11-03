@@ -3,6 +3,7 @@ import { supabase, Ticket } from '../lib/supabase';
 import { TicketTable } from './TicketTable';
 import { TicketDetail } from './TicketDetail';
 import { Filter } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Dashboard() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -10,6 +11,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
+  const { profile } = useAuth();
   const [filters, setFilters] = useState({
     category: 'all',
     urgency: 'all',
@@ -18,18 +20,28 @@ export function Dashboard() {
   });
 
   useEffect(() => {
-    fetchTickets();
-  }, []);
+    if (profile?.department) {
+      fetchTickets(profile.department);
+    }
+  }, [profile?.department]);
+
+  useEffect(() => {
+    if (profile?.department) {
+      setFilters((prev) => ({ ...prev, department: profile.department }));
+    }
+  }, [profile?.department]);
 
   useEffect(() => {
     applyFilters();
   }, [tickets, filters]);
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (department: string) => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('tickets')
         .select('*')
+        .eq('department', department)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -69,7 +81,9 @@ export function Dashboard() {
   };
 
   const handleUpdateTicket = () => {
-    fetchTickets();
+    if (profile?.department) {
+      fetchTickets(profile.department);
+    }
   };
 
   return (
@@ -125,11 +139,9 @@ export function Dashboard() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">All Departments</option>
-              <option value="Finance">Finance</option>
-              <option value="Dev">Dev</option>
-              <option value="Product">Product</option>
-              <option value="Security">Security</option>
-              <option value="Support">Support</option>
+              {profile?.department && (
+                <option value={profile.department}>{profile.department}</option>
+              )}
             </select>
           </div>
 

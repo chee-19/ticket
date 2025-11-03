@@ -15,7 +15,7 @@ export interface Ticket {
   attachment_url?: string | string[];
   category: string;
   urgency: string;
-  department: string;
+  department: string | null;
   status: string;
   ai_suggested_reply?: string;
   assigned_agent?: string;
