@@ -33,8 +33,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
           <p className="text-gray-600">
             No department assigned. Ask an admin to set your department in Supabase →
             profiles.
-            No department assigned to your profile. Please contact an administrator to
-            gain access.
           </p>
         </div>
       </div>

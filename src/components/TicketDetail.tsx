@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { shouldFilterByDepartment } from '../constants/departments';
+import Modal from './Modal';
 
 interface TicketDetailProps {
   ticket?: Ticket;
@@ -36,6 +37,13 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
 
   const standalone = !ticket;
   const isModal = typeof onClose === 'function';
+  const handleReturn = () => {
+    if (isModal) {
+      onClose?.();
+    } else {
+      navigate('/tickets');
+    }
+  };
 
   useEffect(() => {
     if (!ticket) return;
@@ -175,35 +183,27 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     return new Date(currentTicket.sla_deadline) < new Date();
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+  const loadingContent = (
+    <div className="min-h-[50vh] flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+    </div>
+  );
+
+  const errorContent = (
+    <div className="bg-white rounded-xl shadow-lg p-8 text-center text-red-600">
+      {error}
+      <div className="mt-4">
+        <button
+          onClick={handleReturn}
+          className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
+        >
+          Return to tickets
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (error) {
-    return (
-      <div className="bg-white rounded-xl shadow-lg p-8 text-center text-red-600">
-        {error}
-        <div className="mt-4">
-          <button
-            onClick={() => navigate('/tickets')}
-            className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
-          >
-            Return to tickets
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentTicket) {
-    return null;
-  }
-
-  const detailContent = (
+  const detailContent = currentTicket ? (
     <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full">
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex justify-between items-start rounded-t-xl">
         <div>
@@ -405,14 +405,30 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
         </div>
       </div>
     </div>
-  );
+  ) : null;
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        {detailContent}
-      </div>
+      <Modal open onClose={onClose ?? (() => navigate('/tickets'))} width="drawer">
+        {loading
+          ? loadingContent
+          : error
+          ? errorContent
+          : detailContent}
+      </Modal>
     );
+  }
+
+  if (loading) {
+    return loadingContent;
+  }
+
+  if (error) {
+    return errorContent;
+  }
+
+  if (!detailContent) {
+    return null;
   }
 
   return <div className="max-w-5xl mx-auto py-8">{detailContent}</div>;

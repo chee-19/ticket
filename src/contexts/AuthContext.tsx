@@ -41,26 +41,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = useCallback(async (userId: string) => {
-    try {
-      const { data, error } = await withTimeout(
-        supabase
-          .from('profiles')
-          .select('id, full_name, department, created_at')
-          .eq('id', userId)
-          .maybeSingle(),
-        5000
-      );
-      if ((error as any)) {
-        console.error('Failed to load profile', error);
+  const loadProfile = useCallback(
+    async (userId: string) => {
+      try {
+        const { data, error } = await withTimeout(
+          supabase
+            .from('profiles')
+            .select('id, full_name, department, created_at')
+            .eq('id', userId)
+            .maybeSingle(),
+          5000
+        );
+        if (error) {
+          console.error('Failed to load profile', error);
+          return null;
+        }
+        return data ?? null;
+      } catch (e) {
+        console.warn('Profile fetch timed out; proceeding without it', e);
         return null;
       }
-      return (data as Profile) ?? null;
-    } catch (e) {
-      console.warn('Profile fetch timed out; proceeding without it', e);
-      return null;
-    }
-  }, []);
+    },
+    []
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -71,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const {
           data: { session: initialSession },
         } = await supabase.auth.getSession();
+
         if (!isMounted) return;
 
         setSession(initialSession);
@@ -78,40 +82,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (initialSession?.user) {
           try {
-            const p = await loadProfile(initialSession.user.id);
-            if (isMounted) setProfile(p);
+            const profileData = await loadProfile(initialSession.user.id);
+            if (isMounted) {
+              setProfile(profileData);
+            }
           } catch (err) {
             console.error('Initial profile load failed', err);
-            if (isMounted) setProfile(null);
+            if (isMounted) {
+              setProfile(null);
+            }
           }
         } else {
           setProfile(null);
         }
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchSession();
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       if (!isMounted) return;
-
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
       if (newSession?.user) {
         setLoading(true);
         loadProfile(newSession.user.id)
-          .then((p) => {
-            if (isMounted) setProfile(p);
+          .then((profileData) => {
+            if (isMounted) {
+              setProfile(profileData);
+            }
           })
           .catch((err) => {
             console.error('Profile fetch after auth state change failed', err);
-            if (isMounted) setProfile(null);
+            if (isMounted) {
+              setProfile(null);
+            }
           })
           .finally(() => {
-            if (isMounted) setLoading(false);
+            if (isMounted) {
+              setLoading(false);
+            }
           });
       } else {
         setProfile(null);
@@ -121,28 +138,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       isMounted = false;
-      sub.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, [loadProfile]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {
-      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (!error && data.session?.user) {
         setSession(data.session);
         setUser(data.session.user);
-
-        // Fire-and-forget: do not block the caller (prevents “Signing in…” hang)
         loadProfile(data.session.user.id)
-          .then((p) => setProfile(p))
+          .then((profileData) => {
+            setProfile(profileData);
+          })
           .catch((err) => {
             console.error('Profile fetch after sign-in failed', err);
             setProfile(null);
           });
       }
 
-      return { error: error as any };
+      return { error };
     },
     [loadProfile]
   );
