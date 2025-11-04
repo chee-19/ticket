@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { buttonPrimary } from '../styles/theme';
 
 export default function Login() {
   const { signIn, session, loading } = useAuth();
@@ -32,33 +33,33 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white shadow-xl rounded-2xl p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-3 rounded-xl">
-              <LogIn className="w-7 h-7 text-white" />
+    <div className="flex min-h-screen items-center justify-center bg-app bg-app-gradient px-4 text-primary">
+      <div className="w-full max-w-md space-y-6">
+        <div className="card p-8">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="rounded-xl bg-gradient-to-br from-accent/60 to-accent-strong/80 p-3 shadow-glow">
+              <LogIn className="h-7 w-7 text-app" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Staff Login</h1>
-              <p className="text-sm text-gray-500">Access your department workspace</p>
+              <h1 className="text-2xl font-semibold text-primary">Staff Login</h1>
+              <p className="text-sm text-secondary">Access your department workspace</p>
             </div>
           </div>
 
           {formError && (
-            <div className="flex items-start gap-2 mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              <AlertCircle className="w-4 h-4 mt-0.5" />
+            <div className="mb-4 flex items-start gap-2 rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
+              <AlertCircle className="mt-0.5 h-4 w-4" />
               <span>{formError}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="email">
+              <label className="mb-2 block text-sm font-medium text-secondary" htmlFor="email">
                 Email address
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
                 <input
                   id="email"
                   type="email"
@@ -66,18 +67,18 @@ export default function Login() {
                   onChange={(event) => setEmail(event.target.value)}
                   required
                   autoComplete="email"
-                  className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-white/10 bg-elevated/70 py-2 pl-10 pr-4 text-primary placeholder:text-muted focus:border-accent focus:outline-none focus:ring-0"
                   placeholder="agent@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="password">
+              <label className="mb-2 block text-sm font-medium text-secondary" htmlFor="password">
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
                 <input
                   id="password"
                   type="password"
@@ -85,33 +86,31 @@ export default function Login() {
                   onChange={(event) => setPassword(event.target.value)}
                   required
                   autoComplete="current-password"
-                  className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-white/10 bg-elevated/70 py-2 pl-10 pr-4 text-primary placeholder:text-muted focus:border-accent focus:outline-none focus:ring-0"
                   placeholder="••••••••"
                 />
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full flex justify-center items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 py-2.5 text-white font-semibold shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50"
-            >
+            <button type="submit" disabled={submitting} className={`${buttonPrimary} flex w-full`}>
               <span>{submitting ? 'Signing in...' : 'Sign in'}</span>
             </button>
           </form>
         </div>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-secondary">
           Need access? Contact your administrator to be added to the correct department.
         </p>
 
-        <button
-          type="button"
-          onClick={() => navigate('/', { replace: true })}
-          className="mt-6 px-5 py-2.5 rounded-lg text-white font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all mx-auto block"
-        >
-          ← Back to Support Ticket
-        </button>
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => navigate('/', { replace: true })}
+            className={buttonPrimary}
+          >
+            ← Back to Support Ticket
+          </button>
+        </div>
       </div>
     </div>
   );

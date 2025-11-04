@@ -45,11 +45,11 @@ export default function Modal({ open, onClose, children }: ModalProps) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative w-[95%] max-w-3xl rounded-2xl bg-white shadow-2xl"
+        className="card-elevated w-[95%] max-w-3xl"
         role="dialog"
         aria-modal="true"
         onClick={(event) => event.stopPropagation()}

@@ -95,10 +95,10 @@ export function Analytics() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+      <div className="card p-8 text-center text-secondary">
         <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+          <div className="mx-auto h-4 w-3/4 rounded bg-white/10"></div>
+          <div className="mx-auto h-4 w-1/2 rounded bg-white/10"></div>
         </div>
       </div>
     );
@@ -107,68 +107,70 @@ export function Analytics() {
   const metrics = calculateMetrics();
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <Clock className="w-8 h-8 opacity-80" />
-            <span className="text-xs font-semibold bg-white bg-opacity-20 px-2 py-1 rounded">
-              HOURS
+    <div className="space-y-8 text-primary">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="card bg-gradient-to-br from-accent/20 via-accent/10 to-transparent p-6 text-primary">
+          <div className="mb-4 flex items-center justify-between text-secondary">
+            <Clock className="h-8 w-8 text-accent" />
+            <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-semibold uppercase tracking-wide">
+              Hours
             </span>
           </div>
-          <h3 className="text-3xl font-bold mb-1">{metrics.avgResponseTime}</h3>
-          <p className="text-blue-100 text-sm">Avg Response Time</p>
+          <h3 className="text-3xl font-semibold text-primary">{metrics.avgResponseTime}</h3>
+          <p className="text-sm text-secondary">Avg Response Time</p>
         </div>
 
-        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <AlertTriangle className="w-8 h-8 opacity-80" />
-            <span className="text-xs font-semibold bg-white bg-opacity-20 px-2 py-1 rounded">
-              RATE
+        <div className="card bg-gradient-to-br from-danger/25 via-danger/10 to-transparent p-6 text-primary">
+          <div className="mb-4 flex items-center justify-between text-secondary">
+            <AlertTriangle className="h-8 w-8 text-danger" />
+            <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-semibold uppercase tracking-wide">
+              Rate
             </span>
           </div>
-          <h3 className="text-3xl font-bold mb-1">{metrics.slaBreachRate}%</h3>
-          <p className="text-red-100 text-sm">SLA Breach Rate</p>
+          <h3 className="text-3xl font-semibold text-primary">{metrics.slaBreachRate}%</h3>
+          <p className="text-sm text-secondary">SLA Breach Rate</p>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <TrendingUp className="w-8 h-8 opacity-80" />
-            <span className="text-xs font-semibold bg-white bg-opacity-20 px-2 py-1 rounded">
-              TOTAL
+        <div className="card bg-gradient-to-br from-accent-teal/20 via-accent-teal/10 to-transparent p-6 text-primary">
+          <div className="mb-4 flex items-center justify-between text-secondary">
+            <TrendingUp className="h-8 w-8 text-accent-teal" />
+            <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-semibold uppercase tracking-wide">
+              Total
             </span>
           </div>
-          <h3 className="text-3xl font-bold mb-1">{metrics.totalTickets}</h3>
-          <p className="text-green-100 text-sm">Total Tickets</p>
+          <h3 className="text-3xl font-semibold text-primary">{metrics.totalTickets}</h3>
+          <p className="text-sm text-secondary">Total Tickets</p>
         </div>
 
-        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <Users className="w-8 h-8 opacity-80" />
-            <span className="text-xs font-semibold bg-white bg-opacity-20 px-2 py-1 rounded">
-              ACTIVE
+        <div className="card bg-gradient-to-br from-accent-strong/20 via-accent-strong/10 to-transparent p-6 text-primary">
+          <div className="mb-4 flex items-center justify-between text-secondary">
+            <Users className="h-8 w-8 text-accent-strong" />
+            <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-semibold uppercase tracking-wide">
+              Active
             </span>
           </div>
-          <h3 className="text-3xl font-bold mb-1">{metrics.openTickets + metrics.inProgressTickets}</h3>
-          <p className="text-amber-100 text-sm">Active Tickets</p>
+          <h3 className="text-3xl font-semibold text-primary">
+            {metrics.openTickets + metrics.inProgressTickets}
+          </h3>
+          <p className="text-sm text-secondary">Active Tickets</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Tickets by Category</h3>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="card p-6">
+          <h3 className="mb-6 text-lg font-semibold text-primary">Tickets by Category</h3>
           <div className="space-y-4">
             {Object.entries(metrics.categoryBreakdown).map(([category, count]) => {
               const percentage = (count / metrics.totalTickets) * 100;
               return (
                 <div key={category}>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-700 font-medium">{category}</span>
-                    <span className="text-gray-600">{count} tickets</span>
+                  <div className="mb-2 flex justify-between text-sm">
+                    <span className="font-medium text-secondary">{category}</span>
+                    <span className="text-secondary">{count} tickets</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div className="h-3 w-full overflow-hidden rounded-full bg-white/5">
                     <div
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+                      className="h-3 rounded-full bg-gradient-to-r from-accent to-accent-strong transition-all duration-500"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
@@ -178,8 +180,8 @@ export function Analytics() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Department Load (Active Tickets)</h3>
+        <div className="card p-6">
+          <h3 className="mb-6 text-lg font-semibold text-primary">Department Load (Active Tickets)</h3>
           <div className="space-y-4">
             {Object.entries(metrics.departmentLoad).length > 0 ? (
               Object.entries(metrics.departmentLoad).map(([department, count]) => {
@@ -187,13 +189,13 @@ export function Analytics() {
                 const percentage = (count / maxLoad) * 100;
                 return (
                   <div key={department}>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-700 font-medium">{department}</span>
-                      <span className="text-gray-600">{count} active</span>
+                    <div className="mb-2 flex justify-between text-sm">
+                      <span className="font-medium text-secondary">{department}</span>
+                      <span className="text-secondary">{count} active</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-white/5">
                       <div
-                        className="bg-gradient-to-r from-amber-500 to-amber-600 h-3 rounded-full transition-all duration-500"
+                        className="h-3 rounded-full bg-gradient-to-r from-accent-strong to-accent"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
@@ -201,30 +203,30 @@ export function Analytics() {
                 );
               })
             ) : (
-              <p className="text-gray-500 text-center py-8">No active tickets</p>
+              <p className="py-8 text-center text-secondary">No active tickets</p>
             )}
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Ticket Status Distribution</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-            <p className="text-3xl font-bold text-blue-600 mb-1">{metrics.openTickets}</p>
-            <p className="text-sm text-gray-600">Open</p>
+      <div className="card p-6">
+        <h3 className="mb-6 text-lg font-semibold text-primary">Ticket Status Distribution</h3>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="card-elevated flex flex-col items-center gap-1 p-4 text-center">
+            <p className="text-3xl font-semibold text-accent">{metrics.openTickets}</p>
+            <p className="text-sm text-secondary">Open</p>
           </div>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-            <p className="text-3xl font-bold text-yellow-600 mb-1">{metrics.inProgressTickets}</p>
-            <p className="text-sm text-gray-600">In Progress</p>
+          <div className="card-elevated flex flex-col items-center gap-1 p-4 text-center">
+            <p className="text-3xl font-semibold text-warning">{metrics.inProgressTickets}</p>
+            <p className="text-sm text-secondary">In Progress</p>
           </div>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-            <p className="text-3xl font-bold text-green-600 mb-1">{metrics.resolvedTickets}</p>
-            <p className="text-sm text-gray-600">Resolved</p>
+          <div className="card-elevated flex flex-col items-center gap-1 p-4 text-center">
+            <p className="text-3xl font-semibold text-success">{metrics.resolvedTickets}</p>
+            <p className="text-sm text-secondary">Resolved</p>
           </div>
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-            <p className="text-3xl font-bold text-gray-600 mb-1">{metrics.totalTickets}</p>
-            <p className="text-sm text-gray-600">Total</p>
+          <div className="card-elevated flex flex-col items-center gap-1 p-4 text-center">
+            <p className="text-3xl font-semibold text-secondary">{metrics.totalTickets}</p>
+            <p className="text-sm text-secondary">Total</p>
           </div>
         </div>
       </div>

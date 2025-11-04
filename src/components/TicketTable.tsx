@@ -4,6 +4,7 @@ import { Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase, Ticket } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { shouldFilterByDepartment } from '../constants/departments';
+import { statusBadge, urgencyBadge } from '../styles/theme';
 
 interface TicketTableProps {
   tickets?: Ticket[];
@@ -24,9 +25,12 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
 
   const wrapStandalone = (content: ReactElement) =>
     standalone ? (
-      <div className="space-y-6">
+      <div className="space-y-6 text-primary">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Open Tickets</h2>
+          <h2 className="text-2xl font-semibold text-primary">Open Tickets</h2>
+          <p className="text-sm text-secondary">
+            Showing active tickets scoped to your department
+          </p>
         </div>
         {content}
       </div>
@@ -83,28 +87,15 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
     navigate(`/tickets/${ticket.id}`);
   };
 
-  const getUrgencyColor = (urgency: string) => {
-    switch (urgency) {
-      case 'High':
-        return 'bg-red-100 text-red-800';
-      case 'Medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'Open':
-        return <AlertCircle className="w-4 h-4 text-blue-600" />;
+        return <AlertCircle className="h-4 w-4 text-accent" />;
       case 'In Progress':
-        return <Clock className="w-4 h-4 text-yellow-600" />;
+        return <Clock className="h-4 w-4 text-warning" />;
       case 'Resolved':
       case 'Closed':
-        return <CheckCircle2 className="w-4 h-4 text-green-600" />;
+        return <CheckCircle2 className="h-4 w-4 text-success" />;
       default:
         return null;
     }
@@ -127,10 +118,10 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
 
   if (isLoading) {
     return wrapStandalone(
-      <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+      <div className="card p-8 text-center text-secondary">
         <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+          <div className="mx-auto h-4 w-3/4 rounded bg-white/10"></div>
+          <div className="mx-auto h-4 w-1/2 rounded bg-white/10"></div>
         </div>
       </div>
     );
@@ -138,7 +129,7 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
 
   if (error) {
     return wrapStandalone(
-      <div className="bg-white rounded-xl shadow-lg p-8 text-center text-red-600">
+      <div className="card p-8 text-center text-danger">
         {error}
       </div>
     );
@@ -146,83 +137,77 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
 
   if (displayTickets.length === 0) {
     return wrapStandalone(
-      <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
+      <div className="card p-8 text-center text-secondary">
         No tickets found
       </div>
     );
   }
 
   const tableContent = (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div className="card overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gradient-to-r from-blue-50 to-blue-100">
+          <thead className="bg-white/5 text-secondary">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                 Ticket ID
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                 Subject
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                 Category
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                 Urgency
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                 Department
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                 Created
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-white/5">
             {displayTickets.map((ticket) => (
               <tr
                 key={ticket.id}
                 onClick={() => handleRowClick(ticket)}
-                className={`hover:bg-blue-50 cursor-pointer transition-colors ${
-                  isSLABreached(ticket.sla_deadline, ticket.status) ? 'bg-red-50' : ''
+                className={`cursor-pointer transition-colors hover:bg-white/5 ${
+                  isSLABreached(ticket.sla_deadline, ticket.status) ? 'bg-danger/10' : ''
                 }`}
               >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm font-medium text-blue-600">
+                <td className="whitespace-nowrap px-6 py-4">
+                  <span className="text-sm font-semibold text-accent">
                     {ticket.ticket_number}
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900 font-medium truncate max-w-xs">
+                  <div className="max-w-xs truncate text-sm font-medium text-primary">
                     {ticket.subject}
                   </div>
-                  <div className="text-xs text-gray-500">{ticket.name}</div>
+                  <div className="text-xs text-secondary">{ticket.name}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-700">{ticket.category}</span>
+                <td className="whitespace-nowrap px-6 py-4">
+                  <span className="text-sm text-secondary">{ticket.category}</span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getUrgencyColor(
-                      ticket.urgency
-                    )}`}
-                  >
-                    {ticket.urgency}
-                  </span>
+                <td className="whitespace-nowrap px-6 py-4">
+                  <span className={urgencyBadge(ticket.urgency)}>{ticket.urgency}</span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-700">{ticket.department ?? 'Unassigned'}</span>
+                <td className="whitespace-nowrap px-6 py-4">
+                  <span className="text-sm text-secondary">{ticket.department ?? 'Unassigned'}</span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="whitespace-nowrap px-6 py-4">
                   <div className="flex items-center gap-2">
                     {getStatusIcon(ticket.status)}
-                    <span className="text-sm text-gray-700">{ticket.status}</span>
+                    <span className={statusBadge(ticket.status)}>{ticket.status}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-secondary">
                   {formatDate(ticket.created_at)}
                 </td>
               </tr>

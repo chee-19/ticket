@@ -8,41 +8,35 @@ import { TicketTable } from './components/TicketTable';
 import { TicketDetail } from './components/TicketDetail';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Login from './pages/Login';
+import { buttonGhost } from './styles/theme';
 
 function PublicLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <nav className="bg-white shadow-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-2 rounded-lg">
-                <Headphones className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Helpdesk Assistant</h1>
-                <p className="text-xs text-gray-500">AI-Powered Support Automation</p>
-              </div>
+    <div className="min-h-screen bg-app bg-app-gradient text-primary">
+      <nav className="bg-surface/80 backdrop-blur border-b border-white/5">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-gradient-to-br from-accent/60 to-accent-strong/80 p-2 shadow-glow">
+              <Headphones className="h-6 w-6 text-app" />
             </div>
-
-            <Link
-              to="/login"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              <LogIn className="w-5 h-5" />
-              <span className="font-medium">Staff Login</span>
-            </Link>
+            <div>
+              <h1 className="text-xl font-semibold text-primary">Helpdesk Assistant</h1>
+              <p className="text-xs text-secondary">AI-Powered Support Automation</p>
+            </div>
           </div>
+
+          <Link to="/login" className={buttonGhost}>
+            <LogIn className="h-5 w-5" />
+            <span className="font-medium">Staff Login</span>
+          </Link>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">{children}</main>
 
-      <footer className="bg-white border-t border-gray-200 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-gray-500 text-sm">
-            Helpdesk Triage Assistant - Powered by AI | Automate Your Support
-          </p>
+      <footer className="border-t border-white/5 bg-surface/80 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-4 py-6 text-center text-sm text-secondary">
+          Helpdesk Triage Assistant - Powered by AI | Automate Your Support
         </div>
       </footer>
     </div>
