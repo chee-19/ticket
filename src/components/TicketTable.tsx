@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase, Ticket } from '../lib/supabase';
@@ -22,6 +22,18 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
   const displayTickets = tickets ?? internalTickets;
   const isLoading = loading ?? internalLoading;
 
+  const wrapStandalone = (content: ReactElement) =>
+    standalone ? (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Open Tickets</h2>
+        </div>
+        {content}
+      </div>
+    ) : (
+      content
+    );
+
   useEffect(() => {
     if (!standalone || !profile?.department) return;
 
@@ -33,7 +45,8 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
       let query = supabase
         .from('tickets')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .in('status', ['Open', 'In Progress']);
 
       if (shouldFilterByDepartment(profile.department)) {
         query = query.eq('department', profile.department);
@@ -113,7 +126,7 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
   };
 
   if (isLoading) {
-    return (
+    return wrapStandalone(
       <div className="bg-white rounded-xl shadow-lg p-8 text-center">
         <div className="animate-pulse space-y-4">
           <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
@@ -124,7 +137,7 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
   }
 
   if (error) {
-    return (
+    return wrapStandalone(
       <div className="bg-white rounded-xl shadow-lg p-8 text-center text-red-600">
         {error}
       </div>
@@ -132,14 +145,14 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
   }
 
   if (displayTickets.length === 0) {
-    return (
+    return wrapStandalone(
       <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
         No tickets found
       </div>
     );
   }
 
-  return (
+  const tableContent = (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -219,4 +232,6 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
       </div>
     </div>
   );
+
+  return wrapStandalone(tableContent);
 }

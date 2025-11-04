@@ -31,6 +31,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
   const [status, setStatus] = useState(ticket?.status ?? 'Open');
   const [assignedAgent, setAssignedAgent] = useState(ticket?.assigned_agent ?? '');
   const [updating, setUpdating] = useState(false);
+  const [updated, setUpdated] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(!ticket);
   const [error, setError] = useState<string | null>(null);
@@ -50,8 +51,13 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     setCurrentTicket(ticket);
     setStatus(ticket.status);
     setAssignedAgent(ticket.assigned_agent ?? '');
+    setUpdated(false);
     setLoading(false);
   }, [ticket]);
+
+  useEffect(() => {
+    setUpdated(false);
+  }, [status, assignedAgent]);
 
   useEffect(() => {
     if (!standalone || !params.id || !profile?.department) return;
@@ -82,6 +88,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
         setCurrentTicket(data);
         setStatus(data.status);
         setAssignedAgent(data.assigned_agent ?? '');
+        setUpdated(false);
       }
 
       setLoading(false);
@@ -114,6 +121,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
   const handleUpdate = async () => {
     if (!currentTicket) return;
     setUpdating(true);
+    setUpdated(false);
     try {
       const updates: Partial<Ticket> & { resolved_at?: string | null } = {
         status,
@@ -135,23 +143,21 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
 
       onUpdate?.();
 
-      if (standalone) {
-        setCurrentTicket((prev) =>
-          prev
-            ? {
-                ...prev,
-                status,
-                assigned_agent: assignedAgent || null,
-                resolved_at:
-                  status === 'Resolved' || status === 'Closed'
-                    ? updates.resolved_at ?? prev.resolved_at
-                    : null,
-              }
-            : prev
-        );
-      } else {
-        onClose?.();
-      }
+      setCurrentTicket((prev) =>
+        prev
+          ? {
+              ...prev,
+              status,
+              assigned_agent: assignedAgent || null,
+              resolved_at:
+                status === 'Resolved' || status === 'Closed'
+                  ? updates.resolved_at ?? prev.resolved_at
+                  : null,
+            }
+          : prev
+      );
+
+      setUpdated(true);
     } catch (error) {
       console.error('Error updating ticket:', error);
     } finally {
@@ -385,7 +391,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 mt-6">
+          <div className="mt-6 flex flex-wrap items-center justify-end gap-4">
             {isModal && (
               <button
                 onClick={onClose}
@@ -394,13 +400,25 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
                 Cancel
               </button>
             )}
-            <button
-              onClick={handleUpdate}
-              disabled={updating}
-              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50"
-            >
-              {updating ? 'Updating...' : 'Update Ticket'}
-            </button>
+            {!updated ? (
+              <button
+                onClick={handleUpdate}
+                disabled={updating}
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50"
+              >
+                {updating ? 'Updating…' : 'Update Ticket'}
+              </button>
+            ) : (
+              <>
+                <span className="text-sm text-green-600">Successfully Updated</span>
+                <button
+                  onClick={() => navigate('/dashboard', { replace: true })}
+                  className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all"
+                >
+                  View Dashboard
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

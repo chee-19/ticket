@@ -49,7 +49,7 @@ function StaffLayout({ children }: { children: ReactNode }) {
 
   const navItems = [
     { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
-    { label: 'Tickets', to: '/tickets', icon: Table2 },
+    { label: 'Open Tickets', to: '/tickets', icon: Table2 },
     { label: 'Analytics', to: '/analytics', icon: BarChart3 },
   ];
 
