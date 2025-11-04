@@ -104,6 +104,14 @@ export default function Login() {
         <p className="text-center text-sm text-gray-500 mt-6">
           Need access? Contact your administrator to be added to the correct department.
         </p>
+
+        <button
+          type="button"
+          onClick={() => navigate('/', { replace: true })}
+          className="mt-6 px-5 py-2.5 rounded-lg text-white font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all mx-auto block"
+        >
+          ← Back to Support Ticket
+        </button>
       </div>
     </div>
   );
