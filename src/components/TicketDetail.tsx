@@ -409,7 +409,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
 
   if (isModal) {
     return (
-      <Modal open onClose={onClose ?? (() => navigate('/tickets'))} width="drawer">
+      <Modal open onClose={onClose ?? (() => navigate('/tickets'))}>
         {loading
           ? loadingContent
           : error
