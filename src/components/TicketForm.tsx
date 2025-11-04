@@ -22,19 +22,20 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
     Math.random().toString(36)
   );
 
-  // optional: small helper so the UI doesn’t block on the webhook call
-  const notifyN8n = async (payload: unknown) => {
+  const notifyN8n = (payload: unknown) => {
     const url = import.meta.env.VITE_N8N_WEBHOOK_URL as string | undefined;
-    if (!url) return; // silently skip if not configured
+    if (!url) return;
     try {
-      // Don’t block UX on this; it just kicks off the classification
-      await fetch(url, {
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 5000);
+      fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
+        signal: controller.signal,
+      }).catch(() => {});
     } catch {
-      // ignore webhook errors in the UI; your n8n logs will show failures
+      // swallow webhook errors; background automation logs them separately
     }
   };
 
@@ -101,7 +102,8 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
       if (!inserted) throw new Error('Insert returned no data');
 
       // 2) Kick n8n to classify THIS ticket now
-      await notifyN8n({
+      notifyN8n({
+        ticket_id: inserted.id,
         id: inserted.id,
         name: inserted.name,
         email: inserted.email,
