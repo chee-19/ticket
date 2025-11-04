@@ -11,6 +11,12 @@ import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Department } from '../constants/departments';
 
+const withTimeout = <T,>(p: Promise<T>, ms = 5000) =>
+  Promise.race([
+    p,
+    new Promise<never>((_, rej) => setTimeout(() => rej(new Error('profile-timeout')), ms)),
+  ]);
+
 export type Profile = {
   id: string;
   full_name: string | null;
@@ -35,6 +41,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const loadProfile = useCallback(
+    async (userId: string) => {
+      try {
+        const { data, error } = await withTimeout(
+          supabase
+            .from('profiles')
+            .select('id, full_name, department, created_at')
+            .eq('id', userId)
+            .maybeSingle(),
+          5000
+        );
+        if (error) {
+          console.error('Failed to load profile', error);
+          return null;
+        }
+        return data ?? null;
+      } catch (e) {
+        console.warn('Profile fetch timed out; proceeding without it', e);
+        return null;
+      }
+    },
+    []
+  );
   const loadProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
@@ -55,6 +84,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const fetchSession = async () => {
       setLoading(true);
+      try {
+        const {
+          data: { session: initialSession },
+        } = await supabase.auth.getSession();
+
+        if (!isMounted) return;
+
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+
+        if (initialSession?.user) {
+          try {
+            const profileData = await loadProfile(initialSession.user.id);
+            if (isMounted) {
+              setProfile(profileData);
+            }
+          } catch (err) {
+            console.error('Initial profile load failed', err);
+            if (isMounted) {
+              setProfile(null);
+            }
+          }
+        } else {
+          setProfile(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
       const {
         data: { session: initialSession },
       } = await supabase.auth.getSession();
@@ -86,6 +145,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (newSession?.user) {
         setLoading(true);
+        loadProfile(newSession.user.id)
+          .then((profileData) => {
+            if (isMounted) {
+              setProfile(profileData);
+            }
+          })
+          .catch((err) => {
+            console.error('Profile fetch after auth state change failed', err);
+            if (isMounted) {
+              setProfile(null);
+            }
+          })
+          .finally(() => {
+            if (isMounted) {
+              setLoading(false);
+            }
+          });
+      } else {
+        setProfile(null);
+        setLoading(false);
         const profileData = await loadProfile(newSession.user.id);
         if (isMounted) {
           setProfile(profileData);
@@ -115,6 +194,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!error && data.session?.user) {
         setSession(data.session);
         setUser(data.session.user);
+        loadProfile(data.session.user.id)
+          .then((profileData) => {
+            setProfile(profileData);
+          })
+          .catch((err) => {
+            console.error('Profile fetch after sign-in failed', err);
+            setProfile(null);
+          });
         const profileData = await loadProfile(data.session.user.id);
         setProfile(profileData);
       }

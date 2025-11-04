@@ -31,6 +31,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-3">Access Restricted</h2>
           <p className="text-gray-600">
+            No department assigned. Ask an admin to set your department in Supabase →
+            profiles.
             No department assigned to your profile. Please contact an administrator to
             gain access.
           </p>
