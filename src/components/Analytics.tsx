@@ -1,30 +1,50 @@
 import { useState, useEffect } from 'react';
 import { supabase, Ticket } from '../lib/supabase';
 import { TrendingUp, AlertTriangle, Clock, Users } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { shouldFilterByDepartment } from '../constants/departments';
 
 export function Analytics() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const { profile } = useAuth();
 
   useEffect(() => {
-    fetchTickets();
-  }, []);
+    if (!profile?.department) return;
 
-  const fetchTickets = async () => {
-    try {
-      const { data, error } = await supabase
+    let isMounted = true;
+
+    const fetchTickets = async () => {
+      setLoading(true);
+      let query = supabase
         .from('tickets')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setTickets(data || []);
-    } catch (error) {
-      console.error('Error fetching tickets:', error);
-    } finally {
+      if (shouldFilterByDepartment(profile.department)) {
+        query = query.eq('department', profile.department);
+      }
+
+      const { data, error } = await query;
+
+      if (!isMounted) return;
+
+      if (error) {
+        console.error('Error fetching tickets:', error);
+        setTickets([]);
+      } else {
+        setTickets(data || []);
+      }
+
       setLoading(false);
-    }
-  };
+    };
+
+    fetchTickets();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [profile?.department]);
 
   const calculateMetrics = () => {
     const resolvedTickets = tickets.filter(

@@ -1,13 +1,88 @@
-import { Ticket } from '../lib/supabase';
+import { type ReactElement, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { supabase, Ticket } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { shouldFilterByDepartment } from '../constants/departments';
 
 interface TicketTableProps {
-  tickets: Ticket[];
-  onTicketClick: (ticket: Ticket) => void;
-  loading: boolean;
+  tickets?: Ticket[];
+  onTicketClick?: (ticket: Ticket) => void;
+  loading?: boolean;
 }
 
 export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProps) {
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+  const [internalTickets, setInternalTickets] = useState<Ticket[]>([]);
+  const [internalLoading, setInternalLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const standalone = tickets === undefined;
+  const displayTickets = tickets ?? internalTickets;
+  const isLoading = loading ?? internalLoading;
+
+  const wrapStandalone = (content: ReactElement) =>
+    standalone ? (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Open Tickets</h2>
+        </div>
+        {content}
+      </div>
+    ) : (
+      content
+    );
+
+  useEffect(() => {
+    if (!standalone || !profile?.department) return;
+
+    let isMounted = true;
+
+    const fetchTickets = async () => {
+      setInternalLoading(true);
+      setError(null);
+      let query = supabase
+        .from('tickets')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .in('status', ['Open', 'In Progress']);
+
+      if (shouldFilterByDepartment(profile.department)) {
+        query = query.eq('department', profile.department);
+      }
+
+      const { data, error: fetchError } = await query;
+
+      if (!isMounted) return;
+
+      if (fetchError) {
+        console.error('Error fetching tickets', fetchError);
+        setError('Unable to load tickets for your department.');
+        setInternalTickets([]);
+      } else {
+        setInternalTickets(data ?? []);
+      }
+
+      setInternalLoading(false);
+    };
+
+    fetchTickets();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [standalone, profile?.department]);
+
+  const handleRowClick = (ticket: Ticket) => {
+    if (onTicketClick) {
+      onTicketClick(ticket);
+      return;
+    }
+
+    navigate(`/tickets/${ticket.id}`);
+  };
+
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
       case 'High':
@@ -50,8 +125,8 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
     return new Date(deadline) < new Date();
   };
 
-  if (loading) {
-    return (
+  if (isLoading) {
+    return wrapStandalone(
       <div className="bg-white rounded-xl shadow-lg p-8 text-center">
         <div className="animate-pulse space-y-4">
           <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
@@ -61,15 +136,23 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
     );
   }
 
-  if (tickets.length === 0) {
-    return (
+  if (error) {
+    return wrapStandalone(
+      <div className="bg-white rounded-xl shadow-lg p-8 text-center text-red-600">
+        {error}
+      </div>
+    );
+  }
+
+  if (displayTickets.length === 0) {
+    return wrapStandalone(
       <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
         No tickets found
       </div>
     );
   }
 
-  return (
+  const tableContent = (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -99,10 +182,10 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {tickets.map((ticket) => (
+            {displayTickets.map((ticket) => (
               <tr
                 key={ticket.id}
-                onClick={() => onTicketClick(ticket)}
+                onClick={() => handleRowClick(ticket)}
                 className={`hover:bg-blue-50 cursor-pointer transition-colors ${
                   isSLABreached(ticket.sla_deadline, ticket.status) ? 'bg-red-50' : ''
                 }`}
@@ -131,7 +214,7 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-700">{ticket.department}</span>
+                  <span className="text-sm text-gray-700">{ticket.department ?? 'Unassigned'}</span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-2">
@@ -149,4 +232,6 @@ export function TicketTable({ tickets, onTicketClick, loading }: TicketTableProp
       </div>
     </div>
   );
+
+  return wrapStandalone(tableContent);
 }
