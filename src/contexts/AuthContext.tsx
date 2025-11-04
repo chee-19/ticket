@@ -64,6 +64,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     []
   );
+  const loadProfile = useCallback(async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, department, created_at')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Failed to load profile', error);
+      return null;
+    }
+
+    return data ?? null;
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -100,6 +114,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
         }
       }
+      const {
+        data: { session: initialSession },
+      } = await supabase.auth.getSession();
+
+      if (!isMounted) return;
+
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+
+      if (initialSession?.user) {
+        const profileData = await loadProfile(initialSession.user.id);
+        if (!isMounted) return;
+        setProfile(profileData);
+      } else {
+        setProfile(null);
+      }
+
+      setLoading(false);
     };
 
     fetchSession();
@@ -133,6 +165,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setLoading(false);
+        const profileData = await loadProfile(newSession.user.id);
+        if (isMounted) {
+          setProfile(profileData);
+          setLoading(false);
+        }
+      } else {
+        setProfile(null);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     });
 
@@ -160,6 +202,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error('Profile fetch after sign-in failed', err);
             setProfile(null);
           });
+        const profileData = await loadProfile(data.session.user.id);
+        setProfile(profileData);
       }
 
       return { error };
