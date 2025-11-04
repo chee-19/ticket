@@ -54,15 +54,7 @@ export default function Modal({ open, onClose, children }: ModalProps) {
         aria-modal="true"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 text-slate-500 transition hover:text-slate-700"
-          aria-label="Close"
-        >
-          ✕
-        </button>
-        <div className="max-h-[85vh] overflow-y-auto overscroll-contain p-6 pt-12">{children}</div>
+        <div className="max-h-[85vh] overflow-y-auto overscroll-contain p-6">{children}</div>
       </div>
     </div>,
     document.body
