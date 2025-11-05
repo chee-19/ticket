@@ -443,6 +443,8 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             ? errorContent
             : detailContent}
         </Modal>
+
+        {/* Email activity modal */}
         <TicketEmailLog
           ticketId={ticketIdForLog}
           open={openEmailLog}
