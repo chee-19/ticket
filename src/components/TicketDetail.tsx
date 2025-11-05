@@ -274,6 +274,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             </div>
             <p className="text-sm text-primary/80">{formatDate(currentTicket.created_at)}</p>
           </div>
+        </div>
 
           <div className={`rounded-lg border p-4 ${
             isSLABreached() ? 'border-danger/40 bg-danger/10' : 'border-white/5 bg-white/5'
@@ -306,6 +307,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Urgency</p>
             <span className={urgencyBadge(currentTicket.urgency)}>{currentTicket.urgency}</span>
           </div>
+        </div>
 
           <div className="rounded-lg border border-white/5 bg-elevated/60 p-4">
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Department</p>
