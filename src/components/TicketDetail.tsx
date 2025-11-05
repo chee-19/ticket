@@ -8,8 +8,6 @@ import {
   Mail,
   Calendar,
   AlertTriangle,
-  Copy,
-  Check,
   ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,6 +15,7 @@ import { shouldFilterByDepartment } from '../constants/departments';
 import Modal from './Modal';
 import { TicketEmailLog } from './TicketEmailLog';
 import { buttonGhost, buttonPrimary, urgencyBadge } from '../styles/theme';
+import { AIReplyEditor } from './AIReplyEditor';
 
 interface TicketDetailProps {
   ticket?: Ticket;
@@ -34,7 +33,6 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
   const [assignedAgent, setAssignedAgent] = useState(ticket?.assigned_agent ?? '');
   const [updating, setUpdating] = useState(false);
   const [updated, setUpdated] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(!ticket);
   const [error, setError] = useState<string | null>(null);
   const [openEmailLog, setOpenEmailLog] = useState(false);
@@ -177,14 +175,6 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     }
   };
 
-  const handleCopyReply = () => {
-    if (currentTicket?.ai_suggested_reply) {
-      navigator.clipboard.writeText(currentTicket.ai_suggested_reply);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
       month: 'long',
@@ -284,6 +274,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             </div>
             <p className="text-sm text-primary/80">{formatDate(currentTicket.created_at)}</p>
           </div>
+        </div>
 
           <div className={`rounded-lg border p-4 ${
             isSLABreached() ? 'border-danger/40 bg-danger/10' : 'border-white/5 bg-white/5'
@@ -316,6 +307,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Urgency</p>
             <span className={urgencyBadge(currentTicket.urgency)}>{currentTicket.urgency}</span>
           </div>
+        </div>
 
           <div className="rounded-lg border border-white/5 bg-elevated/60 p-4">
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Department</p>
@@ -360,34 +352,12 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
           </div>
         </div>
 
-        {currentTicket.ai_suggested_reply && (
-          <div>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-primary">AI-Suggested Reply</h3>
-              <button
-                onClick={handleCopyReply}
-                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-sm text-secondary transition-colors hover:bg-white/10 hover:text-primary"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4 text-success" />
-                    <span className="text-success">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    <span>Copy</span>
-                  </>
-                )}
-              </button>
-            </div>
-            <div className="rounded-lg border border-white/5 bg-white/5 p-4">
-              <p className="whitespace-pre-wrap leading-relaxed text-secondary">
-                {currentTicket.ai_suggested_reply}
-              </p>
-            </div>
-          </div>
-        )}
+        <AIReplyEditor
+          initialText={currentTicket.ai_suggested_reply ?? ''}
+          toEmail={currentTicket.email}
+          subject={currentTicket.subject}
+          department={currentTicket.department ?? undefined}
+        />
 
         <div className="border-t border-white/5 pt-6">
           <h3 className="mb-4 text-lg font-semibold text-primary">Update Ticket</h3>
