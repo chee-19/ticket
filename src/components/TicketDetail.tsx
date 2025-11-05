@@ -334,6 +334,9 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Urgency</p>
             <span className={urgencyBadge(currentTicket.urgency)}>{currentTicket.urgency}</span>
           </div>
+          <p className="text-sm text-primary/80">{formatDate(currentTicket.created_at)}</p>
+        </div>
+      </div>
 
           <div className="rounded-lg border border-white/5 bg-elevated/60 p-4">
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Department</p>
@@ -484,7 +487,23 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
           </div>
 
         </div>
+      )}
+
+      {/* Description */}
+      <div>
+        <h3 className="mb-3 text-lg font-semibold text-primary">Description</h3>
+        <div className="rounded-lg border border-white/5 bg-white/5 p-4">
+          <p className="whitespace-pre-wrap text-secondary">{currentTicket.description}</p>
+        </div>
       </div>
+
+      {/* Editable AI reply */}
+      <AIReplyEditor
+        initialText={currentTicket.ai_suggested_reply ?? ''}
+        toEmail={currentTicket.email}
+        subject={currentTicket.subject}
+        department={currentTicket.department ?? undefined}
+      />
     </div>
   ) : null;
 
@@ -531,4 +550,22 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
       />
     </div>
   );
+}
+
+// non-modal branch
+if (loading) return loadingContent;
+if (error) return errorContent;
+if (!detailContent) return null;
+
+return (
+  <div className="mx-auto max-w-5xl py-8 text-primary">
+    {detailContent}
+    <TicketEmailLog
+      ticketId={ticketIdForLog}
+      open={openEmailLog}
+      onClose={() => setOpenEmailLog(false)}
+    />
+  </div>
+);
+
 }
