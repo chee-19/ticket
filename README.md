@@ -122,7 +122,7 @@ npm run build
 - Ensure `.env` contains your own n8n **Production Webhook URL** (`VITE_N8N_WEBHOOK_URL`).
 - You can reuse your own Supabase credentials for testing.
 - The AI workflow (`classify & draft`) is modular — replaceable with any OpenAI-compatible or Gemini API.
-- The n8n workflow is provided as a `.json` export file (`helpdesk-triage-workflow.json`).
+- The n8n workflow is provided as a `.json` export file.
 
 ---
 
