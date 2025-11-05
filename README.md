@@ -9,8 +9,8 @@ Built with **Vite + React + TailwindCSS**, integrated with **Supabase** (for aut
 
 ### 1. Clone the repository
 ```
-git clone https://github.com/your-username/helpdesk-triage-assistant.git
-cd helpdesk-triage-assistant
+git clone https://github.com/chee-19/ticket.git
+
 ```
 
 ### 2. Install dependencies
@@ -19,7 +19,7 @@ npm install
 ```
 
 ### 3. Configure environment variables
-Create a `.env` file in the project root and fill in your own credentials:
+Edit the `.env` file in the project root and fill in your own credentials:
 
 ```
 VITE_SUPABASE_URL="https://your-project.supabase.co"
