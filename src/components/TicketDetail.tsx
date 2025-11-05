@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { shouldFilterByDepartment } from '../constants/departments';
 import Modal from './Modal';
+import { TicketEmailLog } from './TicketEmailLog';
 import { buttonGhost, buttonPrimary, urgencyBadge } from '../styles/theme';
 
 interface TicketDetailProps {
@@ -36,10 +37,16 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(!ticket);
   const [error, setError] = useState<string | null>(null);
+  const [openEmailLog, setOpenEmailLog] = useState(false);
 
   const standalone = !ticket;
   const isModal = typeof onClose === 'function';
+  const handleCloseModal = () => {
+    setOpenEmailLog(false);
+    onClose?.();
+  };
   const handleReturn = () => {
+    setOpenEmailLog(false);
     if (isModal) {
       onClose?.();
     } else {
@@ -55,6 +62,10 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     setUpdated(false);
     setLoading(false);
   }, [ticket]);
+
+  useEffect(() => {
+    setOpenEmailLog(false);
+  }, [currentTicket?.id]);
 
   useEffect(() => {
     setUpdated(false);
@@ -210,6 +221,8 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     </div>
   );
 
+  const ticketIdForLog = currentTicket?.id ?? params.id ?? null;
+
   const detailContent = currentTicket ? (
     <div className="card-elevated w-full max-w-4xl overflow-hidden">
       <div className="flex items-start justify-between bg-gradient-to-r from-[#1c3d8a] to-[#1a4fb7] p-6 text-primary">
@@ -220,22 +233,30 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             {currentTicket.status}
           </span>
         </div>
-        {isModal ? (
+        <div className="flex items-center gap-3">
           <button
-            onClick={onClose}
-            className="rounded-lg bg-white/10 p-2 text-primary transition-colors hover:bg-white/20"
+            onClick={() => setOpenEmailLog(true)}
+            className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm font-medium text-primary/80 transition-colors hover:border-accent/60 hover:text-primary"
           >
-            <X className="h-6 w-6" />
+            View Emails Sent
           </button>
-        ) : (
-          <button
-            onClick={() => navigate('/tickets')}
-            className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm text-primary transition-colors hover:bg-white/20"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to tickets
-          </button>
-        )}
+          {isModal ? (
+            <button
+              onClick={handleCloseModal}
+              className="rounded-lg bg-white/10 p-2 text-primary transition-colors hover:bg-white/20"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          ) : (
+            <button
+              onClick={handleReturn}
+              className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm text-primary transition-colors hover:bg-white/20"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to tickets
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-6 p-6 text-primary">
@@ -404,7 +425,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
           <div className="mt-6 flex flex-wrap items-center justify-end gap-4">
             {isModal && (
               <button
-                onClick={onClose}
+                onClick={handleCloseModal}
                 className={buttonGhost}
               >
                 Cancel
@@ -437,13 +458,20 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
 
   if (isModal) {
     return (
-      <Modal open onClose={onClose ?? (() => navigate('/tickets'))}>
-        {loading
-          ? loadingContent
-          : error
-          ? errorContent
-          : detailContent}
-      </Modal>
+      <>
+        <Modal open onClose={onClose ? handleCloseModal : () => navigate('/tickets')}>
+          {loading
+            ? loadingContent
+            : error
+            ? errorContent
+            : detailContent}
+        </Modal>
+        <TicketEmailLog
+          ticketId={ticketIdForLog}
+          open={openEmailLog}
+          onClose={() => setOpenEmailLog(false)}
+        />
+      </>
     );
   }
 
@@ -459,5 +487,14 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     return null;
   }
 
-  return <div className="mx-auto max-w-5xl py-8 text-primary">{detailContent}</div>;
+  return (
+    <div className="mx-auto max-w-5xl py-8 text-primary">
+      {detailContent}
+      <TicketEmailLog
+        ticketId={ticketIdForLog}
+        open={openEmailLog}
+        onClose={() => setOpenEmailLog(false)}
+      />
+    </div>
+  );
 }
