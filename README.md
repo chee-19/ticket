@@ -1,100 +1,48 @@
 # Helpdesk Triage Assistant
 
-A modern AI-powered helpdesk web application that classifies, routes, and drafts replies for support tickets.  
-Built with **Vite + React + TailwindCSS**, integrated with **Supabase** (for authentication and database), and **n8n** (for automation and AI classification).
+This project is a Vite + React + Tailwind front-end that integrates with Supabase for ticket storage, authentication, and automation hooks.
 
----
+## Staff Accounts
 
-## ⚙️ Setup Guide
+Staff access is managed through Supabase Auth and the companion `public.profiles` table. To onboard a new agent:
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/your-username/helpdesk-triage-assistant.git
-cd helpdesk-triage-assistant
-2. Install dependencies
-bash
-Copy code
-npm install
-3. Configure environment variables
-Create a .env file in the project root and fill in your own credentials:
+1. Create the user in Supabase Auth (email + password). You can do this through the Supabase dashboard or via the CLI `supabase auth signup` command.
+2. Insert or upsert the matching profile with an allowed department. Profiles must use one of: `Finance`, `Dev`, `Product`, `Security`, `Support`, or `All Departments`. Use `All Departments` only for staff who should see every ticket—never assign this value to a ticket row.
 
-bash
-Copy code
-VITE_SUPABASE_URL="https://your-project.supabase.co"
-VITE_SUPABASE_ANON_KEY="your-supabase-anon-key"
-VITE_N8N_WEBHOOK_URL="Production URL"
-⚠️ Important:
-You must replace VITE_N8N_WEBHOOK_URL with the Production Webhook URL from your deployed n8n workflow.
-Example:
+Example SQL templates (replace the bracketed values):
 
-ini
-Copy code
-VITE_N8N_WEBHOOK_URL="https://your-n8n-instance.cloudflare.workers.dev/webhook/helpdesk"
-💡 If you want to use your own AI model or API, open your n8n workflow and edit the HTTP Request node — replace the current endpoint URL with your own API (e.g. OpenAI, Gemini, or HuggingFace).
-The rest of the flow will still work the same way.
-
-🧠 How It Works
-Customer submits a support ticket on the public form.
-
-Supabase stores the ticket in the tickets table.
-
-n8n workflow is triggered via webhook:
-
-Classifies the department, urgency, and category.
-
-Generates a draft reply using AI.
-
-Updates the ticket record in Supabase.
-
-Department staff logs in to the dashboard:
-
-Sees tickets only for their department.
-
-Reviews and edits the AI-generated draft.
-
-Clicks “Open Email Draft” to launch Gmail with the pre-filled reply.
-
-After sending the email, staff should:
-
-Change the Status to Resolved or Closed.
-
-Enter their name in Assigned Agent to record accountability.
-
-👩‍💻 Staff Accounts Setup
-Staff accounts are managed via Supabase Auth and the public.profiles table.
-
-Create the staff user in Supabase Auth:
-
-sql
-Copy code
+```sql
+-- Dev agent
 select auth.admin.create_user(
-  email := 'STAFF_EMAIL',
-  password := 'STAFF_PASSWORD',
+  email := 'DEV_EMAIL',
+  password := 'DEV_PASSWORD',
   email_confirm := true
 );
-Insert the profile record:
 
-sql
-Copy code
 insert into public.profiles (id, full_name, department)
-values ('STAFF_USER_ID', 'Full Name', 'Support')
+values ('DEV_USER_ID', 'Full Name', 'Dev')
 on conflict (id) do update set
   full_name = excluded.full_name,
   department = excluded.department;
-Departments supported: Finance, Dev, Product, Security, Support, All Departments.
+```
 
-🧩 Tech Stack
-Layer	Technology
-Frontend	React + TypeScript + TailwindCSS
-Backend	Supabase (PostgreSQL + Auth)
-AI Automation	n8n workflow
-Hosting	Bolt.new (Vercel)
+```sql
+-- Finance agent
+select auth.admin.create_user(
+  email := 'FINANCE_EMAIL',
+  password := 'FINANCE_PASSWORD',
+  email_confirm := true
+);
 
-📁 Database Schema (Supabase)
-Key tables:
+insert into public.profiles (id, full_name, department)
+values ('FINANCE_USER_ID', 'Full Name', 'Finance')
+on conflict (id) do update set
+  full_name = excluded.full_name,
+  department = excluded.department;
+```
 
-tickets — stores all incoming tickets and AI-generated drafts
+> ℹ️ When using the SQL templates above, the `DEV_USER_ID`/`FINANCE_USER_ID` values should match the `id` returned from `auth.admin.create_user`.
 
-profiles — maps staff users to departments
+Row-Level Security (RLS) now blocks unauthenticated reads and restricts authenticated staff to tickets for their own department. Public ticket submissions remain open via the anonymous insert policy.
 
-outgoing_messages — logs sent replies for audit tracking
+The local development seed script (`supabase/seed.sql`) provisions sample Dev and Finance agents (password `Password123!`) plus example tickets across Finance, Dev, and Support. Run `supabase db reset` to apply the latest migrations and seeds when working locally.
