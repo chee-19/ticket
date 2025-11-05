@@ -25,7 +25,12 @@ VITE_SUPABASE_URL="https://your-project.supabase.co"
 VITE_SUPABASE_ANON_KEY="your-supabase-anon-key"
 VITE_N8N_WEBHOOK_URL="Production URL"
 ```
+Or you can edit here at the supabase.ts file:
+```
+const supabaseUrl = 'URL';
+const supabaseAnonKey = 'Anon key'
 
+```
 ⚠️ **Important:**  
 You must replace `VITE_N8N_WEBHOOK_URL` with the **Production Webhook URL** from your deployed n8n workflow.  
 Example:
