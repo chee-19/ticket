@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Send, Loader2, XCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { buttonPrimary } from '../styles/theme';
 
 interface TicketFormProps {
   onSuccess?: () => void;
@@ -22,19 +23,20 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
     Math.random().toString(36)
   );
 
-  // optional: small helper so the UI doesn’t block on the webhook call
-  const notifyN8n = async (payload: unknown) => {
+  const notifyN8n = (payload: unknown) => {
     const url = import.meta.env.VITE_N8N_WEBHOOK_URL as string | undefined;
-    if (!url) return; // silently skip if not configured
+    if (!url) return;
     try {
-      // Don’t block UX on this; it just kicks off the classification
-      await fetch(url, {
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 5000);
+      fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
+        signal: controller.signal,
+      }).catch(() => {});
     } catch {
-      // ignore webhook errors in the UI; your n8n logs will show failures
+      // swallow webhook errors; background automation logs them separately
     }
   };
 
@@ -101,7 +103,8 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
       if (!inserted) throw new Error('Insert returned no data');
 
       // 2) Kick n8n to classify THIS ticket now
-      await notifyN8n({
+      notifyN8n({
+        ticket_id: inserted.id,
         id: inserted.id,
         name: inserted.name,
         email: inserted.email,
@@ -128,72 +131,72 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl w-full">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Submit a Support Ticket</h2>
+    <div className="card w-full max-w-2xl p-8">
+      <h2 className="mb-6 text-2xl font-semibold text-primary">Submit a Support Ticket</h2>
 
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+        <div className="mb-6 rounded-lg border border-success/30 bg-success/10 p-4 text-sm text-success">
           Ticket submitted successfully! Our team will get back to you soon.
         </div>
       )}
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+        <div className="mb-6 rounded-lg border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5 text-primary">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+          <label className="mb-2 block text-sm font-medium text-secondary">Your Name</label>
           <input
             type="text"
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-lg border border-white/10 bg-elevated/70 px-4 py-2 text-primary placeholder:text-muted focus:border-accent focus:outline-none focus:ring-0"
             placeholder="John Doe"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+          <label className="mb-2 block text-sm font-medium text-secondary">Email Address</label>
           <input
             type="email"
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-lg border border-white/10 bg-elevated/70 px-4 py-2 text-primary placeholder:text-muted focus:border-accent focus:outline-none focus:ring-0"
             placeholder="john@example.com"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+          <label className="mb-2 block text-sm font-medium text-secondary">Subject</label>
           <input
             type="text"
             required
             value={formData.subject}
             onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-lg border border-white/10 bg-elevated/70 px-4 py-2 text-primary placeholder:text-muted focus:border-accent focus:outline-none focus:ring-0"
             placeholder="Brief description of your issue"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+          <label className="mb-2 block text-sm font-medium text-secondary">Description</label>
           <textarea
             required
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             rows={5}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full resize-none rounded-lg border border-white/10 bg-elevated/70 px-4 py-2 text-primary placeholder:text-muted focus:border-accent focus:outline-none focus:ring-0"
             placeholder="Please provide detailed information about your issue..."
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Attachments (PDF, JPG, PNG)</label>
+          <label className="mb-2 block text-sm font-medium text-secondary">Attachments (PDF, JPG, PNG)</label>
           <input
             key={attachmentInputKey}
             type="file"
@@ -235,14 +238,14 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
               });
               setAttachmentInputKey(Math.random().toString(36));
             }}
-            className="w-full cursor-pointer text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            className="w-full cursor-pointer text-sm text-secondary file:mr-4 file:rounded-lg file:border-0 file:bg-white/10 file:px-4 file:py-2 file:font-semibold file:text-primary hover:file:bg-white/20"
           />
           {attachments.length > 0 && (
             <ul className="mt-3 space-y-2">
               {attachments.map((file, index) => (
                 <li
                   key={`${file.name}-${index}`}
-                  className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700"
+                  className="flex items-center justify-between rounded-lg border border-white/5 bg-elevated/50 px-3 py-2 text-sm text-primary"
                 >
                   <span className="truncate pr-3" title={file.name}>
                     {file.name}
@@ -252,7 +255,7 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
                     onClick={() =>
                       setAttachments((prev) => prev.filter((_, i) => i !== index))
                     }
-                    className="inline-flex items-center text-red-600 hover:text-red-700"
+                    className="inline-flex items-center text-danger hover:text-danger/80"
                     aria-label={`Remove ${file.name}`}
                   >
                     <XCircle className="h-4 w-4" />
@@ -263,11 +266,7 @@ export function TicketForm({ onSuccess }: TicketFormProps) {
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <button type="submit" disabled={loading} className={`${buttonPrimary} flex w-full`}>
           {loading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
