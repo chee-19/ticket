@@ -34,7 +34,7 @@ VITE_N8N_WEBHOOK_URL="https://your-n8n-instance.cloudflare.workers.dev/webhook/h
 ```
 
 💡 **If you want to use your own AI model or API**, open your n8n workflow and edit the **HTTP Request node** — replace the current endpoint URL with your own API (e.g. OpenAI, Gemini, or HuggingFace).  
-The rest of the flow will still work the same way.
+The rest of the flow will still work the same way. Additionally, enter the supabase credentials to n8n.
 
 ---
 
@@ -120,6 +120,7 @@ npm run build
 ## 🏁 Notes for Reviewers / Hackathon Judges
 
 - Ensure `.env` contains your own n8n **Production Webhook URL** (`VITE_N8N_WEBHOOK_URL`).
+- Ensure to activate the workflow
 - You can reuse your own Supabase credentials for testing.
 - The AI workflow (`classify & draft`) is modular — replaceable with any OpenAI-compatible or Gemini API.
 - The n8n workflow is provided as a `.json` export file.
