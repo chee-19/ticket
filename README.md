@@ -10,7 +10,6 @@ Built with **Vite + React + TailwindCSS**, integrated with **Supabase** (for aut
 ### 1. Clone the repository
 ```
 git clone https://github.com/chee-19/ticket.git
-
 ```
 
 ### 2. Install dependencies
