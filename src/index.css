@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  background: theme('colors.app');
+}
+
+.card {
+  @apply bg-surface/95 backdrop-blur rounded-xl2 shadow-glow border border-white/5;
+}
+
+.card-elevated {
+  @apply bg-elevated/95 backdrop-blur rounded-xl2 shadow-glow border border-white/5;
+}
+
+hr,
+.divider {
+  @apply border-line/80;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #26324a;
+  border-radius: 8px;
+}
