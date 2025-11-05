@@ -1,15 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Ticket, supabase } from '../lib/supabase';
-import {
-  X,
-  Clock,
-  User,
-  Mail,
-  Calendar,
-  AlertTriangle,
-  ArrowLeft,
-} from 'lucide-react';
+import { X, Clock, User, Mail, Calendar, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { shouldFilterByDepartment } from '../constants/departments';
 import Modal from './Modal';
@@ -40,17 +32,15 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
 
   const standalone = !ticket;
   const isModal = typeof onClose === 'function';
+
   const handleCloseModal = () => {
     setOpenEmailLog(false);
     onClose?.();
   };
   const handleReturn = () => {
     setOpenEmailLog(false);
-    if (isModal) {
-      onClose?.();
-    } else {
-      navigate('/tickets');
-    }
+    if (isModal) onClose?.();
+    else navigate('/tickets');
   };
 
   useEffect(() => {
@@ -82,11 +72,8 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     const fetchTicket = async () => {
       setLoading(true);
       setError(null);
-      let query = supabase
-        .from('tickets')
-        .select('*')
-        .eq('id', params.id);
 
+      let query = supabase.from('tickets').select('*').eq('id', params.id);
       if (shouldFilterByDepartment(profile.department)) {
         query = query.eq('department', profile.department);
       }
@@ -110,7 +97,6 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     };
 
     fetchTicket();
-
     return () => {
       isMounted = false;
     };
@@ -120,16 +106,14 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     if (!currentTicket?.attachment_url) return [] as string[];
     const raw = currentTicket.attachment_url;
     if (Array.isArray(raw)) return raw;
-
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed.filter((value): value is string => typeof value === 'string');
+        return parsed.filter((v): v is string => typeof v === 'string');
       }
-    } catch (error) {
-      console.warn('Failed to parse attachment_url, falling back to raw string', error);
+    } catch {
+      console.warn('Failed to parse attachment_url, falling back to raw string');
     }
-
     return [raw];
   }, [currentTicket?.attachment_url]);
 
@@ -149,46 +133,39 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
         updates.resolved_at = null;
       }
 
-      const { error: updateError } = await supabase
-        .from('tickets')
-        .update(updates)
-        .eq('id', currentTicket.id);
-
+      const { error: updateError } = await supabase.from('tickets').update(updates).eq('id', currentTicket.id);
       if (updateError) throw updateError;
 
       onUpdate?.();
 
-      setCurrentTicket((prev) =>
+      setCurrentTicket(prev =>
         prev
           ? {
               ...prev,
               status,
               assigned_agent: assignedAgent || null,
               resolved_at:
-                status === 'Resolved' || status === 'Closed'
-                  ? updates.resolved_at ?? prev.resolved_at
-                  : null,
+                status === 'Resolved' || status === 'Closed' ? updates.resolved_at ?? prev.resolved_at : null,
             }
           : prev
       );
 
       setUpdated(true);
-    } catch (error) {
-      console.error('Error updating ticket:', error);
+    } catch (err) {
+      console.error('Error updating ticket:', err);
     } finally {
       setUpdating(false);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleString('en-US', {
       month: 'long',
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
 
   const isSLABreached = () => {
     if (!currentTicket) return false;
@@ -222,10 +199,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     <div className="card-elevated p-8 text-center text-danger">
       {error}
       <div className="mt-4">
-        <button
-          onClick={handleReturn}
-          className={`${buttonGhost} text-sm`}
-        >
+        <button onClick={handleReturn} className={`${buttonGhost} text-sm`}>
           Return to tickets
         </button>
       </div>
@@ -236,6 +210,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
 
   const detailContent = currentTicket ? (
     <div className="card-elevated w-full max-w-4xl overflow-hidden">
+      {/* Header */}
       <div className="flex items-start justify-between bg-gradient-to-r from-[#1c3d8a] to-[#1a4fb7] p-6 text-primary">
         <div className="space-y-2">
           <h2 className="text-2xl font-semibold">{currentTicket.ticket_number}</h2>
@@ -270,8 +245,9 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
         </div>
       </div>
 
+      {/* Body */}
       <div className="space-y-6 p-6 text-primary">
-        {/* Top info grid */}
+        {/* Top info */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="rounded-lg border border-white/5 bg-white/5 p-4">
             <div className="mb-2 flex items-center gap-2 text-secondary">
@@ -298,7 +274,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
           </div>
         </div>
 
-        {/* SLA box */}
+        {/* SLA */}
         <div
           className={`rounded-lg border p-4 ${
             isSLABreached() ? 'border-danger/40 bg-danger/10' : 'border-white/5 bg-white/5'
@@ -308,11 +284,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             <Clock className="h-4 w-4" />
             <span className="text-sm font-medium">SLA Deadline</span>
           </div>
-          <p
-            className={`text-sm font-medium ${
-              isSLABreached() ? 'text-danger' : 'text-primary'
-            }`}
-          >
+          <p className={`text-sm font-medium ${isSLABreached() ? 'text-danger' : 'text-primary'}`}>
             {formatDate(currentTicket.sla_deadline)}
           </p>
           {isSLABreached() && (
@@ -323,7 +295,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
           )}
         </div>
 
-        {/* Category / Urgency / Department grid */}
+        {/* Category / Urgency / Department */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-lg border border-white/5 bg-elevated/60 p-4">
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Category</p>
@@ -334,9 +306,6 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Urgency</p>
             <span className={urgencyBadge(currentTicket.urgency)}>{currentTicket.urgency}</span>
           </div>
-          <p className="text-sm text-primary/80">{formatDate(currentTicket.created_at)}</p>
-        </div>
-      </div>
 
           <div className="rounded-lg border border-white/5 bg-elevated/60 p-4">
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Department</p>
@@ -356,7 +325,6 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
                 const fileName =
                   cleanUrl.split('?')[0].split('/').filter(Boolean).pop() ||
                   `Attachment ${index + 1}`;
-
                 return (
                   <a
                     key={`${cleanUrl}-${index}`}
@@ -390,9 +358,8 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
           onChange={(value) => setReplyText(value)}
         />
 
-        {/* Footer actions (restored) */}
+        {/* Footer actions */}
         <div className="mt-8 flex flex-col items-stretch gap-3 border-t border-white/10 pt-4 md:flex-row md:items-center md:justify-between">
-          {/* Left-side: reply actions */}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -417,7 +384,6 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             </button>
           </div>
 
-          {/* Right-side: ticket actions */}
           <div className="flex flex-wrap items-center gap-3">
             {isModal && (
               <button
@@ -453,13 +419,12 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
           </div>
         </div>
 
+        {/* Update form */}
         <div className="border-t border-white/5 pt-6">
           <h3 className="mb-4 text-lg font-semibold text-primary">Update Ticket</h3>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-secondary">
-                Status
-              </label>
+              <label className="mb-2 block text-sm font-medium text-secondary">Status</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
@@ -473,9 +438,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-secondary">
-                Assigned Agent
-              </label>
+              <label className="mb-2 block text-sm font-medium text-secondary">Assigned Agent</label>
               <input
                 type="text"
                 value={assignedAgent}
@@ -485,40 +448,18 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
               />
             </div>
           </div>
-
-        </div>
-      )}
-
-      {/* Description */}
-      <div>
-        <h3 className="mb-3 text-lg font-semibold text-primary">Description</h3>
-        <div className="rounded-lg border border-white/5 bg-white/5 p-4">
-          <p className="whitespace-pre-wrap text-secondary">{currentTicket.description}</p>
         </div>
       </div>
-
-      {/* Editable AI reply */}
-      <AIReplyEditor
-        initialText={currentTicket.ai_suggested_reply ?? ''}
-        toEmail={currentTicket.email}
-        subject={currentTicket.subject}
-        department={currentTicket.department ?? undefined}
-      />
     </div>
   ) : null;
 
+  // modal branch
   if (isModal) {
     return (
       <>
         <Modal open onClose={onClose ? handleCloseModal : () => navigate('/tickets')}>
-          {loading
-            ? loadingContent
-            : error
-            ? errorContent
-            : detailContent}
+          {loading ? loadingContent : error ? errorContent : detailContent}
         </Modal>
-
-        {/* Email activity modal */}
         <TicketEmailLog
           ticketId={ticketIdForLog}
           open={openEmailLog}
@@ -528,17 +469,10 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
     );
   }
 
-  if (loading) {
-    return loadingContent;
-  }
-
-  if (error) {
-    return errorContent;
-  }
-
-  if (!detailContent) {
-    return null;
-  }
+  // non-modal branch
+  if (loading) return loadingContent;
+  if (error) return errorContent;
+  if (!detailContent) return null;
 
   return (
     <div className="mx-auto max-w-5xl py-8 text-primary">
@@ -550,22 +484,4 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
       />
     </div>
   );
-}
-
-// non-modal branch
-if (loading) return loadingContent;
-if (error) return errorContent;
-if (!detailContent) return null;
-
-return (
-  <div className="mx-auto max-w-5xl py-8 text-primary">
-    {detailContent}
-    <TicketEmailLog
-      ticketId={ticketIdForLog}
-      open={openEmailLog}
-      onClose={() => setOpenEmailLog(false)}
-    />
-  </div>
-);
-
 }
