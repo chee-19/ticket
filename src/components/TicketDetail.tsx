@@ -313,6 +313,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Urgency</p>
             <span className={urgencyBadge(currentTicket.urgency)}>{currentTicket.urgency}</span>
           </div>
+        </div>
 
           <div className="rounded-lg border border-white/5 bg-elevated/60 p-4">
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Department</p>
