@@ -250,6 +250,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
       </div>
 
       <div className="space-y-6 p-6 text-primary">
+        {/* Top info grid */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="rounded-lg border border-white/5 bg-white/5 p-4">
             <div className="mb-2 flex items-center gap-2 text-secondary">
@@ -276,27 +277,32 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
           </div>
         </div>
 
-          <div className={`rounded-lg border p-4 ${
+        {/* SLA box */}
+        <div
+          className={`rounded-lg border p-4 ${
             isSLABreached() ? 'border-danger/40 bg-danger/10' : 'border-white/5 bg-white/5'
-          }`}>
-            <div className="mb-2 flex items-center gap-2 text-secondary">
-              <Clock className="h-4 w-4" />
-              <span className="text-sm font-medium">SLA Deadline</span>
-            </div>
-            <p className={`text-sm font-medium ${
-              isSLABreached() ? 'text-danger' : 'text-primary'
-            }`}>
-              {formatDate(currentTicket.sla_deadline)}
-            </p>
-            {isSLABreached() && (
-              <div className="mt-1 flex items-center gap-1 text-danger">
-                <AlertTriangle className="h-3 w-3" />
-                <span className="text-xs font-medium">SLA Breached</span>
-              </div>
-            )}
+          }`}
+        >
+          <div className="mb-2 flex items-center gap-2 text-secondary">
+            <Clock className="h-4 w-4" />
+            <span className="text-sm font-medium">SLA Deadline</span>
           </div>
+          <p
+            className={`text-sm font-medium ${
+              isSLABreached() ? 'text-danger' : 'text-primary'
+            }`}
+          >
+            {formatDate(currentTicket.sla_deadline)}
+          </p>
+          {isSLABreached() && (
+            <div className="mt-1 flex items-center gap-1 text-danger">
+              <AlertTriangle className="h-3 w-3" />
+              <span className="text-xs font-medium">SLA Breached</span>
+            </div>
+          )}
         </div>
 
+        {/* Category / Urgency / Department grid */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-lg border border-white/5 bg-elevated/60 p-4">
             <p className="mb-1 text-xs uppercase tracking-wide text-secondary">Category</p>
@@ -317,17 +323,16 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
           </div>
         </div>
 
+        {/* Attachments */}
         {attachmentUrls.length > 0 && (
           <div>
             <h3 className="mb-3 text-lg font-semibold text-primary">Attachments</h3>
             <div className="space-y-2 rounded-lg border border-white/5 bg-white/5 p-4">
               {attachmentUrls.map((url, index) => {
                 const cleanUrl = typeof url === 'string' ? url : String(url);
-                const fileName = cleanUrl
-                  .split('?')[0]
-                  .split('/')
-                  .filter(Boolean)
-                  .pop() || `Attachment ${index + 1}`;
+                const fileName =
+                  cleanUrl.split('?')[0].split('/').filter(Boolean).pop() ||
+                  `Attachment ${index + 1}`;
 
                 return (
                   <a
@@ -345,6 +350,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
           </div>
         )}
 
+        {/* Description */}
         <div>
           <h3 className="mb-3 text-lg font-semibold text-primary">Description</h3>
           <div className="rounded-lg border border-white/5 bg-white/5 p-4">
@@ -352,6 +358,7 @@ export function TicketDetail({ ticket, onClose, onUpdate }: TicketDetailProps) {
           </div>
         </div>
 
+        {/* Editable AI reply */}
         <AIReplyEditor
           initialText={currentTicket.ai_suggested_reply ?? ''}
           toEmail={currentTicket.email}
